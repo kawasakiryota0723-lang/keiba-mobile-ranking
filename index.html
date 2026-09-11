@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#081a35" />
-    <meta name="description" content="Excelの当日全レース結果をスマホで確認する個人用ビューア" />
+    <meta name="description" content="大井競馬の当日全レースをExcelから読み込む個人用ビューア" />
     <title>大井競馬 当日ランキング</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -21,7 +21,7 @@
       <section class="upload-panel" aria-labelledby="uploadTitle">
         <div>
           <h2 id="uploadTitle">Excelを読み込む</h2>
-          <p>更新済みの競馬データファイルを選択してください。</p>
+          <p>更新・保存済みの大井用Excelファイルを選択してください。</p>
         </div>
         <label class="upload-button" for="fileInput">
           <span>ファイルを選択</span>
@@ -59,7 +59,8 @@
     </main>
 
     <template id="raceTemplate">
-      <article class="race-card">
+      <details class="race-card">
+        <summary class="race-toggle">
         <div class="race-head">
           <div class="race-number"></div>
           <div class="horse-block">
@@ -73,10 +74,14 @@
           <div><span>能力差</span><strong class="gap"></strong></div>
           <div><span>人気</span><strong class="popularity"></strong></div>
         </div>
-      </article>
+        <span class="detail-hint">全馬のランキングを見る</span>
+        </summary>
+        <div class="race-details"></div>
+      </details>
     </template>
 
     <script src="./xlsx.full.min.js"></script>
+    <script src="./ranking.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

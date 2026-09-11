@@ -180,6 +180,28 @@ h2 { margin: 0; font-size: 1.05rem; }
 .race-card.candidate { border-color: rgba(57,217,138,.72); background: linear-gradient(145deg, rgba(18,63,53,.98), rgba(10,38,45,.98)); }
 .race-card.unavailable { border-color: rgba(246,196,83,.5); background: rgba(75,59,25,.45); }
 
+.race-toggle { display:block; cursor:pointer; list-style:none; }
+.race-toggle::-webkit-details-marker { display:none; }
+.race-toggle:focus-visible { outline:3px solid var(--accent); outline-offset:-3px; }
+.detail-hint { display:block; padding:12px 15px; border-top:1px solid var(--line); color:#b9d8ff; font-size:.9rem; text-align:center; }
+.detail-hint::after { content:" ＋"; }
+.race-card[open] .detail-hint::after { content:" −"; }
+.race-details { padding:16px 12px; border-top:1px solid var(--line); background:var(--surface); }
+.race-details h2 { font-size:1rem; margin-bottom:12px; }
+.detail-note { margin:0; font-size:1rem; line-height:1.6; color:var(--muted); }
+.horse-table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:1rem; }
+.horse-table th { font-size:.875rem; color:var(--muted); text-align:left; font-weight:600; }
+.horse-table th,.horse-table td { padding:12px 4px; border-bottom:1px solid var(--line); }
+.horse-table th:nth-child(1),.horse-table th:nth-child(2) { width:2.6rem; }
+.horse-table th:last-child { width:4.3rem; }
+.horse-table td:last-child,.horse-table th:last-child { text-align:right; font-variant-numeric:tabular-nums; }
+.horse-table strong { display:block; overflow-wrap:anywhere; line-height:1.5; }
+.jockey { display:block; margin-top:4px; color:var(--muted); font-size:.875rem; }
+.horse-table .rank-1 { background:#244235; }
+.horse-table .rank-1 td:first-child { color:#ffdc74; font-weight:800; }
+.horse-table .rank-2 td:first-child { color:#9ecfff; font-weight:800; }
+.horse-table .rank-3 td:first-child { color:#ffc495; font-weight:800; }
+
 .race-head {
   display: grid;
   grid-template-columns: 50px minmax(0, 1fr) auto;

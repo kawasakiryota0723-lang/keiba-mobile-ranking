@@ -20,6 +20,8 @@ fileInput.addEventListener("change", async (event) => {
   try {
     const data = await file.arrayBuffer();
     const workbook = XLSX.read(data, { type: "array", cellDates: false });
+    const venue = text(workbook.Sheets["自動計算"]?.B3?.v || workbook.Sheets["当日ランキング"]?.B3?.v);
+    if (venue !== "大井") throw new Error("大井用の集計Excelを選んでください。競馬場が大井になっているか確認してください。");
     const sheet = workbook.Sheets["当日全レース"];
 
     if (!sheet) {
@@ -49,15 +51,17 @@ fileInput.addEventListener("change", async (event) => {
         score: displayNumber(row[4], "—", 1),
         gap: displayNumber(row[5], "—", 1),
         decision,
+        ...readRaceDetails(workbook, Number(sheet.B2?.v), raceNumber, row),
       });
     }
 
     races = parsed;
     const targetDate = formatTargetDate(sheet.B2?.v);
-    localStorage.setItem("keiba-mobile-data", JSON.stringify({ targetDate, races }));
+    try { localStorage.setItem("ooi-keiba-mobile-data-v2", JSON.stringify({ targetDate, races })); } catch {}
     showData(targetDate);
   } catch (error) {
     races = [];
+    try { localStorage.removeItem("ooi-keiba-mobile-data-v2"); } catch {}
     raceList.replaceChildren();
     summary.hidden = true;
     filters.hidden = true;
@@ -116,8 +120,57 @@ function renderRaces() {
     node.querySelector(".score").textContent = race.score;
     node.querySelector(".gap").textContent = race.gap;
     node.querySelector(".popularity").textContent = race.popularity === "—" ? "—" : `${race.popularity}番`;
+    node.querySelector(".race-toggle").setAttribute("aria-label", `${race.raceNumber}Rの全馬ランキング`);
+    renderDetails(node.querySelector(".race-details"), race);
+    const hint = node.querySelector(".detail-hint");
+    card.addEventListener("toggle", () => { hint.textContent = card.open ? "ランキングを閉じる" : "全馬のランキングを見る"; });
     raceList.appendChild(node);
   }
+}
+
+function readRaceDetails(workbook, date, raceNumber, overview) {
+  const detail = OoiRanking.getDetails(workbook, date, raceNumber);
+  if (detail.horses.length) {
+    const top = detail.horses[0];
+    if (text(top.horseNumber) !== text(overview[1]) || text(top.horseName) !== text(overview[2]) || Math.abs(top.score - Number(overview[4])) > 0.01) {
+      return { horses: [], error: "全馬の計算結果と一覧が一致しません。Excelで全レース更新を実行・保存して、読み込み直してください。" };
+    }
+  }
+  return detail;
+}
+
+function renderDetails(container, race) {
+  const horses = race.horses || [];
+  if (!horses.length) {
+    const note = document.createElement("p");
+    note.className = "detail-note";
+    note.textContent = race.error || "全馬のランキングを表示するには、Excelをもう一度選択してください。";
+    container.appendChild(note);
+    return;
+  }
+  const title = document.createElement("h2");
+  title.textContent = `${race.raceNumber}R 全馬ランキング（${horses.length}頭）`;
+  container.appendChild(title);
+  const table = document.createElement("table");
+  table.className = "horse-table";
+  const head = document.createElement("thead"), header = document.createElement("tr");
+  for (const label of ["順位", "馬番", "馬名・騎手", "能力点"]) {
+    const th = document.createElement("th"); th.scope = "col"; th.textContent = label; header.appendChild(th);
+  }
+  head.appendChild(header); table.appendChild(head);
+  const body = document.createElement("tbody");
+  for (const horse of horses) {
+    const row = document.createElement("tr");
+    if (horse.rank <= 3) row.className = `rank-${horse.rank}`;
+    const rank = document.createElement("td"); rank.textContent = horse.rank; row.appendChild(rank);
+    const number = document.createElement("td"); number.textContent = horse.horseNumber; row.appendChild(number);
+    const info = document.createElement("td");
+    const name = document.createElement("strong"); name.textContent = `${horse.rating ? horse.rating + " " : ""}${horse.horseName}`; info.appendChild(name);
+    const jockey = document.createElement("span"); jockey.className = "jockey"; jockey.textContent = horse.jockey || "騎手未登録"; info.appendChild(jockey); row.appendChild(info);
+    const score = document.createElement("td"); score.textContent = displayNumber(horse.score, "—", 1); row.appendChild(score);
+    body.appendChild(row);
+  }
+  table.appendChild(body); container.appendChild(table);
 }
 
 function setMessage(title, detail, isError = false) {
@@ -153,11 +206,11 @@ function text(value) {
 }
 
 try {
-  const saved = JSON.parse(localStorage.getItem("keiba-mobile-data"));
+  const saved = JSON.parse(localStorage.getItem("ooi-keiba-mobile-data-v2"));
   if (Array.isArray(saved?.races) && saved.races.length) {
     races = saved.races;
     showData(saved.targetDate);
   }
 } catch {
-  localStorage.removeItem("keiba-mobile-data");
+  try { localStorage.removeItem("ooi-keiba-mobile-data-v2"); } catch {}
 }
